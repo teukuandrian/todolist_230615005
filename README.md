@@ -17,6 +17,6 @@ Tambah tugas
 2.jalankan XAMPP dan buka di 'http://localhost/todolist'
 
 ##Kontributor
--[Teuku Laksaman Andrian](https://github.com/teukuandrian)
+-[Teuku Laksamana Andrian](https://github.com/teukuandrian)
 
 
