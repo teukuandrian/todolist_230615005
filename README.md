@@ -9,9 +9,8 @@ Edit tugas
 Hapus tugas
 
 ##Struktur folder
-'index.php - Halaman Utama
-'proses.php - koneksi ke xampp
-
+'index.php' - Halaman Utama
+'style.css' - memodifikasi tampilan Halaman Utama
 
 ##Cara Menjalankan
 1.Salin file ke folder 'htdocs/'
