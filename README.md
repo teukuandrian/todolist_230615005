@@ -1,11 +1,12 @@
-##Aplikasi to do list sekolah
+##Aplikasi to do list
 
 ##Deskripsi
-Aplikasi sederhana berbasis php dan html untuk mencatat tugas harian sekolah
+Aplikasi sederhana berbasis php dan html untuk mencatat tugas
 
 ##Fitur
 Tambah tugas
-
+Edit tugas
+Hapus tugas
 
 ##Struktur folder
 'index.php - Halaman Utama
@@ -18,5 +19,4 @@ Tambah tugas
 
 ##Kontributor
 -[Teuku Laksamana Andrian](https://github.com/teukuandrian)
-
 
