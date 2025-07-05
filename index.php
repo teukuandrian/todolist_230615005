@@ -1,45 +1,39 @@
 <?php
 session_start();
 
-// Inisialisasi array todo jika belum ada
+// Inisialisasi array tugas jika belum ada
 if (!isset($_SESSION['todos'])) {
     $_SESSION['todos'] = [];
 }
 
-// Fungsi untuk menambah todo
+// Fungsi untuk menambah tugas
 if (isset($_POST['add'])) {
-    $task = trim($_POST['task']);
-    if (!empty($task)) {
-        $newId = uniqid();
-        $_SESSION['todos'][] = [
-            'id' => $newId,
-            'nama_tugas' => htmlspecialchars($task),
-            'status' => false
-        ];
-    }
+    $newTask = [
+        'id' => uniqid(),
+        'nama_tugas' => htmlspecialchars($_POST['nama_tugas']),
+        'status' => 'belum'
+    ];
+    array_push($_SESSION['todos'], $newTask);
     header("Location: ".$_SERVER['PHP_SELF']);
     exit();
 }
 
-// Fungsi untuk menghapus todo
+// Fungsi untuk menghapus tugas
 if (isset($_GET['delete'])) {
     $id = $_GET['delete'];
-    foreach ($_SESSION['todos'] as $key => $todo) {
-        if ($todo['id'] === $id) {
-            unset($_SESSION['todos'][$key]);
-            break;
-        }
-    }
+    $_SESSION['todos'] = array_filter($_SESSION['todos'], function($todo) use ($id) {
+        return $todo['id'] !== $id;
+    });
     header("Location: ".$_SERVER['PHP_SELF']);
     exit();
 }
 
-// Fungsi untuk mengupdate status todo
+// Fungsi untuk mengupdate status tugas
 if (isset($_GET['toggle'])) {
     $id = $_GET['toggle'];
     foreach ($_SESSION['todos'] as &$todo) {
         if ($todo['id'] === $id) {
-            $todo['status'] = !$todo['status'];
+            $todo['status'] = $todo['status'] === 'selesai' ? 'belum' : 'selesai';
             break;
         }
     }
@@ -47,16 +41,13 @@ if (isset($_GET['toggle'])) {
     exit();
 }
 
-// Fungsi untuk mengedit todo
-if (isset($_POST['edit'])) {
+// Fungsi untuk mengedit tugas
+if (isset($_POST['update'])) {
     $id = $_POST['id'];
-    $newTask = trim($_POST['new_task']);
-    if (!empty($newTask)) {
-        foreach ($_SESSION['todos'] as &$todo) {
-            if ($todo['id'] === $id) {
-                $todo['nama_tugas'] = htmlspecialchars($newTask);
-                break;
-            }
+    foreach ($_SESSION['todos'] as &$todo) {
+        if ($todo['id'] === $id) {
+            $todo['nama_tugas'] = htmlspecialchars($_POST['nama_tugas']);
+            break;
         }
     }
     header("Location: ".$_SERVER['PHP_SELF']);
@@ -69,89 +60,99 @@ if (isset($_POST['edit'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Todo List Web-Based App</title>
+    <title>Aplikasi To-Do List</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="style.css">
 </head>
 <body class="bg-gray-100 min-h-screen">
-    <div class="container mx-auto px-4 py-8 max-w-md">
-        <h1 class="text-3xl font-bold text-center text-green-600 mb-8">Todo List Web-Based App</h1>
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold text-center mb-8 text-green-600">Aplikasi To-Do List</h1>
         
-        <!-- Form Tambah Todo -->
-        <form method="POST" class="mb-6 bg-white p-4 rounded-lg shadow">
-            <div class="flex">
-                <input type="text" name="task" placeholder="Tambahkan tugas baru..." 
-                       class="flex-grow px-4 py-2 border rounded-l-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
-                <button type="submit" name="add" class="bg-purple-500 text-white px-4 py-2 rounded-r-lg hover:bg-purple-600 transition">
+        <!-- Form Tambah Tugas -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+            <h2 class="text-xl font-semibold mb-4">Tambah Tugas Baru</h2>
+            <form method="POST" class="flex gap-4">
+                <input type="text" name="nama_tugas" placeholder="Masukkan tugas baru..." 
+                       class="flex-1 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500" required>
+                <button type="submit" name="add" class="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-md transition duration-200">
                     Tambah
                 </button>
-            </div>
-        </form>
+            </form>
+        </div>
         
-        <!-- Daftar Todo -->
-        <div class="bg-white rounded-lg shadow overflow-hidden">
+        <!-- Daftar Tugas -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-xl font-semibold mb-4">Daftar Tugas</h2>
+            
             <?php if (empty($_SESSION['todos'])): ?>
-                <p class="p-4 text-gray-500">Tidak ada tugas saat ini.</p>
+                <p class="text-gray-500 text-center py-4">Belum ada tugas. Yuk tambahkan tugas baru!</p>
             <?php else: ?>
-                <?php foreach ($_SESSION['todos'] as $todo): ?>
-                    <div class="border-b border-gray-200 last:border-b-0">
-                        <div class="p-4 flex items-center justify-between">
+                <ul class="divide-y divide-gray-200">
+                    <?php foreach ($_SESSION['todos'] as $todo): ?>
+                        <li class="py-4 flex items-center justify-between group">
                             <div class="flex items-center">
                                 <!-- Checkbox Status -->
                                 <a href="?toggle=<?= $todo['id'] ?>" class="mr-3">
-                                    <input type="checkbox" <?= $todo['status'] ? 'checked' : '' ?> 
-                                           class="h-5 w-5 text-green-500 rounded focus:ring-green-400 cursor-pointer">
+                                    <div class="w-6 h-6 rounded-full border-2 border-blue-500 flex items-center justify-center <?= $todo['status'] === 'selesai' ? 'bg-blue-500' : '' ?>">
+                                        <?php if ($todo['status'] === 'selesai'): ?>
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-white" viewBox="0 0 20 20" fill="currentColor">
+                                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                                            </svg>
+                                        <?php endif; ?>
+                                    </div>
                                 </a>
                                 
                                 <!-- Nama Tugas -->
-                                <span class="<?= $todo['status'] ? 'line-through text-gray-400' : 'text-gray-800' ?>">
+                                <span class="<?= $todo['status'] === 'selesai' ? 'line-through text-gray-400' : 'text-gray-800' ?>">
                                     <?= $todo['nama_tugas'] ?>
                                 </span>
                             </div>
                             
                             <!-- Tombol Aksi -->
-                            <div class="flex space-x-2">
+                            <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                                 <!-- Form Edit -->
-                                <div x-data="{ open: false }" class="relative">
-                                    <button @click="open = true" class="text-green-500 hover:text-green-600">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                            <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-                                        </svg>
-                                    </button>
-                                    
-                                    <div x-show="open" @click.away="open = false" class="absolute right-0 mt-2 w-64 bg-white rounded-md shadow-lg z-10 p-4">
-                                        <form method="POST">
-                                            <input type="hidden" name="id" value="<?= $todo['id'] ?>">
-                                            <input type="text" name="new_task" value="<?= $todo['nama_tugas'] ?>" 
-                                                   class="w-full px-3 py-2 border rounded mb-2">
-                                            <div class="flex justify-end space-x-2">
-                                                <button type="button" @click="open = false" class="px-3 py-1 text-gray-600 rounded hover:bg-gray-100">
-                                                    Batal
-                                                </button>
-                                                <button type="submit" name="edit" class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600">
-                                                    Simpan
-                                                </button>
-                                            </div>
-                                        </form>
+                                <form method="POST" class="hidden" id="form-edit-<?= $todo['id'] ?>">
+                                    <input type="hidden" name="id" value="<?= $todo['id'] ?>">
+                                    <div class="flex gap-2">
+                                        <input type="text" name="nama_tugas" value="<?= $todo['nama_tugas'] ?>" 
+                                               class="px-3 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500">
+                                        <button type="submit" name="update" class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded-md text-sm">
+                                            Simpan
+                                        </button>
                                     </div>
-                                </div>
+                                </form>
                                 
-                                <!-- Tombol Hapus -->
-                                <a href="?delete=<?= $todo['id'] ?>" class="text-red-500 hover:text-red-600" 
-                                   onclick="return confirm('Apakah Anda yakin ingin menghapus tugas ini?')">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                        <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
-                                    </svg>
-                                </a>
+                                <!-- Tombol Edit dan Hapus -->
+                                <div class="flex gap-2" id="buttons-<?= $todo['id'] ?>">
+                                    <button onclick="toggleEditForm('<?= $todo['id'] ?>')" class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded-md text-sm">
+                                        Edit
+                                    </button>
+                                    <a href="?delete=<?= $todo['id'] ?>" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-md text-sm">
+                                        Hapus
+                                    </a>
+                                </div>
                             </div>
-                        </div>
-                    </div>
-                <?php endforeach; ?>
+                        </li>
+                    <?php endforeach; ?>
+                </ul>
             <?php endif; ?>
         </div>
     </div>
-    
-    <!-- Alpine JS untuk dropdown edit -->
-    <script src="https://cdn.jsdelivr.net/npm/alpinejs@2.8.2/dist/alpine.min.js" defer></script>
+
+    <script>
+        function toggleEditForm(id) {
+            const form = document.getElementById(`form-edit-${id}`);
+            const buttons = document.getElementById(`buttons-${id}`);
+            
+            if (form.classList.contains('hidden')) {
+                form.classList.remove('hidden');
+                buttons.classList.add('hidden');
+                form.querySelector('input[name="nama_tugas"]').focus();
+            } else {
+                form.classList.add('hidden');
+                buttons.classList.remove('hidden');
+            }
+        }
+    </script>
 </body>
 </html>
