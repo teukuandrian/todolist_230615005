@@ -20,3 +20,4 @@ Hapus tugas
 -[Teuku Laksamana Andrian](https://github.com/teukuandrian)
 
 <img width="1920" height="1080" alt="Image" src="https://github.com/user-attachments/assets/a577daa1-829c-41c6-a8b9-6620b2d7348b" />
+<img width="1920" height="1080" alt="Image" src="https://github.com/user-attachments/assets/80979a83-b369-4a93-8043-b329074cdbf9" />
